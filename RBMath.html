@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RB::MATH</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020704;--bg2:#060e08;--bg3:#0a1a0d;--bg4:#0f2414;
+  --green:#00FF41;--green2:#00cc33;--green3:#009922;--green-dim:#003311;
+  --amber:#FFB000;--red:#FF3131;--cyan:#00FFFF;
+  --text:#00FF41;--muted:#006622;--muted2:#004015;
+  --border2:#00FF4122;--border3:#00FF4144;
+  --glow:0 0 10px #00FF4144,0 0 30px #00FF4122;
+  --glow-strong:0 0 8px #00FF41,0 0 20px #00FF4166,0 0 40px #00FF4133;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Fira Code',monospace;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;cursor:crosshair;overflow-x:hidden;
+}
+body::after{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);
+  pointer-events:none;z-index:9999;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.65) 100%);
+  pointer-events:none;z-index:9998;
+}
+
+/* BOOT */
+#boot{
+  position:fixed;inset:0;background:var(--bg);
+  z-index:9997;display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s;
+}
+#boot.gone{opacity:0;pointer-events:none}
+#boot-text{
+  font-family:'Share Tech Mono',monospace;
+  font-size:13px;color:var(--green);
+  width:500px;max-width:90vw;
+  text-shadow:0 0 8px var(--green);
+  line-height:1.8;
+}
+#boot-text p{opacity:0;animation:appear .01s forwards}
+@keyframes appear{to{opacity:1}}
+
+/* HEADER */
+header{
+  position:sticky;top:0;
+  background:rgba(2,7,4,.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border3);
+  z-index:100;
+}
+.hdr{
+  max-width:1200px;margin:0 auto;
+  padding:0 28px;height:58px;
+  display:flex;align-items:center;gap:20px;
+}
+.logo{
+  font-family:'VT323',monospace;font-size:30px;
+  letter-spacing:.08em;color:var(--green);
+  text-shadow:var(--glow-strong);
+  animation:flicker 9s infinite;
+  white-space:nowrap;
+}
+@keyframes flicker{0%,94%,96%,100%{opacity:1}95%,97%{opacity:.5}}
+.logo span{color:var(--amber)}
+.sep{color:var(--muted);user-select:none;font-size:20px}
+.nav{display:flex;gap:4px}
+.nav-btn{
+  background:transparent;border:1px solid transparent;
+  color:var(--muted);font-family:'Fira Code',monospace;
+  font-size:11px;padding:7px 16px;border-radius:4px;cursor:pointer;
+  transition:all .15s;letter-spacing:.08em;text-transform:uppercase;
+}
+.nav-btn:hover{border-color:var(--border3);color:var(--green)}
+.nav-btn.on{border-color:var(--green3);color:var(--green);background:var(--green-dim);box-shadow:var(--glow)}
+.hdr-r{
+  margin-left:auto;display:flex;align-items:center;gap:14px;
+  font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);
+}
+#clock{color:var(--green);text-shadow:0 0 8px var(--green)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* MAIN */
+main{max-width:1200px;margin:0 auto;padding:28px}
+.panel{display:none}
+.panel.on{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ptitle{
+  font-family:'VT323',monospace;font-size:34px;letter-spacing:.08em;
+  color:var(--green);text-shadow:var(--glow);margin-bottom:4px;
+}
+.ptitle::before{content:'> ';color:var(--muted)}
+.psub{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:24px;padding-left:22px;letter-spacing:.06em}
+
+/* CALC */
+.calc-wrap{display:grid;grid-template-columns:320px 1fr;gap:20px}
+.calc-box{background:var(--bg2);border:1px solid var(--border3);border-radius:8px;overflow:hidden;box-shadow:var(--glow)}
+.calc-screen{
+  background:var(--bg);padding:18px;min-height:130px;border-bottom:1px solid var(--border3);
+  display:flex;flex-direction:column;justify-content:flex-end;gap:4px;position:relative;
+}
+.calc-screen::before{content:'CALC_v2.4';position:absolute;top:10px;left:14px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.1em}
+#c-expr{font-family:'Fira Code',monospace;font-size:13px;color:var(--muted);min-height:18px;word-break:break-all}
+#c-disp{font-family:'VT323',monospace;font-size:54px;color:var(--green);text-shadow:var(--glow-strong);text-align:right;line-height:1;min-height:54px}
+.calc-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border3)}
+.cb{
+  background:var(--bg3);border:none;color:var(--text);
+  font-family:'Fira Code',monospace;font-size:15px;font-weight:500;
+  padding:15px 6px;cursor:pointer;transition:all .1s;user-select:none;
+}
+.cb:hover{background:var(--bg4);color:var(--green);text-shadow:0 0 8px var(--green)}
+.cb:active{background:var(--green-dim);transform:scale(.95)}
+.cb.op{color:var(--amber)}
+.cb.op:hover{text-shadow:0 0 8px var(--amber)}
+.cb.eq{background:var(--green-dim);color:var(--green);text-shadow:var(--glow);font-size:20px}
+.cb.clr{color:var(--red)}
+.cb.clr:hover{text-shadow:0 0 8px var(--red)}
+
+.hist-box{background:var(--bg2);border:1px solid var(--border3);border-radius:8px;padding:18px;box-shadow:var(--glow)}
+.hist-hdr{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.ch-clr{background:none;border:1px solid var(--border3);color:var(--muted);font-family:'Fira Code',monospace;font-size:10px;padding:3px 10px;border-radius:3px;cursor:pointer;transition:all .15s}
+.ch-clr:hover{color:var(--red);border-color:var(--red)}
+#hist-list{display:flex;flex-direction:column;gap:5px;max-height:350px;overflow-y:auto}
+#hist-list::-webkit-scrollbar{width:4px}
+#hist-list::-webkit-scrollbar-thumb{background:var(--green3);border-radius:2px}
+.hi{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border-color .15s}
+.hi:hover{border-color:var(--border3)}
+.hi-e{font-size:11px;color:var(--muted)}
+.hi-r{font-family:'VT323',monospace;font-size:22px;color:var(--green);text-shadow:0 0 6px var(--green)}
+
+/* QUIZ */
+.quiz-layout{display:grid;grid-template-columns:1fr 280px;gap:20px}
+.quiz-box{background:var(--bg2);border:1px solid var(--border3);border-radius:8px;padding:24px;box-shadow:var(--glow);display:flex;flex-direction:column;min-height:380px}
+.qhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.qm-btns{display:flex;gap:6px}
+.qm-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-family:'Fira Code',monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.06em}
+.qm-btn.on{border-color:var(--green3);color:var(--green);background:var(--green-dim);box-shadow:var(--glow)}
+.qm-btn:hover:not(.on){color:var(--green);border-color:var(--border3)}
+.qlvl{display:flex;gap:5px}
+.lv-btn{background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Fira Code',monospace;font-size:10px;padding:4px 10px;border-radius:3px;cursor:pointer;transition:all .15s}
+.lv-btn.on{border-color:var(--amber);color:var(--amber)}
+#quiz-q{font-family:'VT323',monospace;font-size:44px;color:var(--green);text-shadow:var(--glow);flex:1;display:flex;align-items:center;margin-bottom:20px;line-height:1.1}
+.qchoices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.qc{background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Fira Code',monospace;font-size:14px;padding:13px;border-radius:6px;cursor:pointer;transition:all .2s;text-align:center}
+.qc:hover:not(:disabled){border-color:var(--green3);color:var(--green);background:var(--green-dim);box-shadow:var(--glow)}
+.qc.ok{border-color:var(--green);background:var(--green-dim);color:var(--green);box-shadow:var(--glow-strong)}
+.qc.ko{border-color:var(--red);background:rgba(255,49,49,.08);color:var(--red)}
+.qc:disabled{cursor:default}
+.qinp-row{display:flex;gap:8px;margin-bottom:14px}
+#qinp{flex:1;background:var(--bg3);border:1px solid var(--border3);color:var(--green);font-family:'VT323',monospace;font-size:30px;padding:10px 14px;border-radius:6px;outline:none;transition:border-color .2s,box-shadow .2s}
+#qinp:focus{border-color:var(--green);box-shadow:var(--glow)}
+#qsubmit{background:var(--green-dim);border:1px solid var(--green3);color:var(--green);font-family:'Fira Code',monospace;font-size:12px;padding:10px 18px;border-radius:6px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.06em}
+#qsubmit:hover{background:var(--bg4);box-shadow:var(--glow)}
+#qfeed{font-family:'Share Tech Mono',monospace;font-size:13px;min-height:20px}
+#qfeed.ok{color:var(--green);text-shadow:0 0 8px var(--green)}
+#qfeed.ko{color:var(--red)}
+.qnext{background:none;border:1px solid var(--border3);color:var(--muted);font-family:'Fira Code',monospace;font-size:11px;padding:8px 18px;border-radius:5px;cursor:pointer;transition:all .15s;margin-top:10px;align-self:flex-start;text-transform:uppercase;letter-spacing:.08em}
+.qnext:hover{color:var(--green);border-color:var(--green3)}
+
+.scoreboard{background:var(--bg2);border:1px solid var(--border3);border-radius:8px;padding:18px;box-shadow:var(--glow)}
+.sb-ttl{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--muted);margin-bottom:16px}
+.srow{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border2)}
+.srow:last-child{border:none;margin-bottom:0;padding-bottom:0}
+.slabel{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.08em}
+.sval{font-family:'VT323',monospace;font-size:50px;color:var(--green);text-shadow:var(--glow);line-height:1}
+.sval.amber{color:var(--amber);text-shadow:0 0 10px var(--amber)}
+.pbar{width:100%;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:6px}
+.pfill{height:100%;background:var(--green);box-shadow:0 0 8px var(--green);border-radius:3px;transition:width .4s ease}
+.streak{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.sdot{width:10px;height:10px;border-radius:2px;background:var(--green-dim);border:1px solid var(--green3);transition:all .2s}
+.sdot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+
+/* GRAPH */
+.graph-layout{display:grid;grid-template-columns:260px 1fr;gap:20px}
+.gcontrols{background:var(--bg2);border:1px solid var(--border3);border-radius:8px;padding:18px;box-shadow:var(--glow);display:flex;flex-direction:column;gap:14px}
+.glabel{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.fpfx{font-family:'VT323',monospace;font-size:20px;color:var(--muted);white-space:nowrap}
+.finp-row{display:flex;gap:6px;align-items:center}
+#finp{flex:1;background:var(--bg3);border:1px solid var(--border3);color:var(--green);font-family:'Fira Code',monospace;font-size:12px;padding:8px 10px;border-radius:5px;outline:none;transition:border-color .2s,box-shadow .2s}
+#finp:focus{border-color:var(--green);box-shadow:var(--glow)}
+.range-row{display:flex;gap:6px}
+.rinp{flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'Fira Code',monospace;font-size:12px;padding:7px 9px;border-radius:4px;outline:none;transition:border-color .2s}
+.rinp:focus{border-color:var(--green3)}
+.presets{display:flex;flex-direction:column;gap:3px}
+.pbtn{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-family:'Fira Code',monospace;font-size:12px;padding:7px 10px;border-radius:4px;cursor:pointer;transition:all .15s;text-align:left}
+.pbtn:hover{color:var(--green);border-color:var(--border3);background:var(--green-dim)}
+.plot-btn{background:var(--green-dim);border:1px solid var(--green3);color:var(--green);font-family:'Fira Code',monospace;font-size:12px;padding:10px;border-radius:6px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.08em;width:100%;box-shadow:var(--glow)}
+.plot-btn:hover{background:var(--bg4);box-shadow:var(--glow-strong)}
+.gcanvas-wrap{background:var(--bg2);border:1px solid var(--border3);border-radius:8px;overflow:hidden;box-shadow:var(--glow);position:relative}
+#gcanvas{display:block;width:100%}
+#gcoords{position:absolute;bottom:12px;right:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);background:rgba(0,7,4,.85);padding:4px 10px;border-radius:4px;border:1px solid var(--border2);pointer-events:none}
+#gerr{display:none;position:absolute;top:12px;left:12px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--red);background:rgba(0,0,0,.75);padding:5px 12px;border-radius:4px;border:1px solid rgba(255,49,49,.3)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--green3);border-radius:3px}
+
+@media(max-width:780px){
+  main{padding:14px}
+  .calc-wrap,.quiz-layout,.graph-layout{grid-template-columns:1fr}
+  .qchoices{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="boot"><div id="boot-text"></div></div>
+
+<header>
+  <div class="hdr">
+    <div class="logo">RB<span>::</span>MATH</div>
+    <span class="sep">//</span>
+    <nav class="nav">
+      <button class="nav-btn on" onclick="showPanel('calc',this)">[ CALC ]</button>
+      <button class="nav-btn"    onclick="showPanel('quiz',this)">[ QUIZ ]</button>
+      <button class="nav-btn"    onclick="showPanel('graph',this)">[ GRAPH ]</button>
+    </nav>
+    <div class="hdr-r">
+      <div class="dot"></div>
+      <span id="clock">00:00:00</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- CALC -->
+  <div class="panel on" id="panel-calc">
+    <div class="ptitle">CALCULATRICE</div>
+    <div class="psub">// standard + expressions avancées + historique</div>
+    <div class="calc-wrap">
+      <div class="calc-box">
+        <div class="calc-screen">
+          <div id="c-expr"></div>
+          <div id="c-disp">0</div>
+        </div>
+        <div class="calc-btns">
+          <button class="cb clr" onclick="cAC()">AC</button>
+          <button class="cb clr" onclick="cDel()">DEL</button>
+          <button class="cb op"  onclick="ci('%')">%</button>
+          <button class="cb op"  onclick="ci('/')">÷</button>
+          <button class="cb" onclick="ci('7')">7</button>
+          <button class="cb" onclick="ci('8')">8</button>
+          <button class="cb" onclick="ci('9')">9</button>
+          <button class="cb op" onclick="ci('*')">×</button>
+          <button class="cb" onclick="ci('4')">4</button>
+          <button class="cb" onclick="ci('5')">5</button>
+          <button class="cb" onclick="ci('6')">6</button>
+          <button class="cb op" onclick="ci('-')">−</button>
+          <button class="cb" onclick="ci('1')">1</button>
+          <button class="cb" onclick="ci('2')">2</button>
+          <button class="cb" onclick="ci('3')">3</button>
+          <button class="cb op" onclick="ci('+')">+</button>
+          <button class="cb op" onclick="ci('(')">( )</button>
+          <button class="cb" onclick="ci('0')">0</button>
+          <button class="cb" onclick="ci('.')">.</button>
+          <button class="cb eq" onclick="cEval()">=</button>
+          <button class="cb op" onclick="ci('Math.sqrt(')">√x</button>
+          <button class="cb op" onclick="ci('Math.pow(')">xⁿ</button>
+          <button class="cb op" onclick="ci('Math.PI')">π</button>
+          <button class="cb op" onclick="ci('Math.E')">e</button>
+        </div>
+      </div>
+      <div class="hist-box">
+        <div class="hist-hdr">
+          // HISTORIQUE
+          <button class="ch-clr" onclick="clrHist()">EFFACER</button>
+        </div>
+        <div id="hist-list"><p style="color:var(--muted);font-size:11px;font-family:'Share Tech Mono',monospace">// aucun calcul encore</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel" id="panel-quiz">
+    <div class="ptitle">QUIZ MATHS</div>
+    <div class="psub">// entraîne ton cerveau — 3 niveaux, 2 modes</div>
+    <div class="quiz-layout">
+      <div class="quiz-box">
+        <div class="qhdr">
+          <div class="qm-btns">
+            <button class="qm-btn on" onclick="setMode('qcm',this)">QCM</button>
+            <button class="qm-btn"    onclick="setMode('libre',this)">LIBRE</button>
+          </div>
+          <div class="qlvl">
+            <button class="lv-btn on" onclick="setLevel(1,this)">LVL1</button>
+            <button class="lv-btn"    onclick="setLevel(2,this)">LVL2</button>
+            <button class="lv-btn"    onclick="setLevel(3,this)">LVL3</button>
+          </div>
+        </div>
+        <div id="quiz-q">[ Appuie sur GÉNÉRER ]</div>
+        <div class="qchoices" id="qchoices"></div>
+        <div class="qinp-row" id="qinp-row" style="display:none">
+          <input id="qinp" type="text" placeholder="?" autocomplete="off"/>
+          <button id="qsubmit" onclick="checkFree()">OK</button>
+        </div>
+        <div id="qfeed"></div>
+        <button class="qnext" onclick="genQ()">GÉNÉRER &gt;&gt;</button>
+      </div>
+      <div class="scoreboard">
+        <div class="sb-ttl">// SCORE.LOG</div>
+        <div class="srow">
+          <div class="slabel">SCORE</div>
+          <div class="sval" id="sval">0</div>
+          <div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div>
+        </div>
+        <div class="srow">
+          <div class="slabel">PRÉCISION</div>
+          <div class="sval amber" id="sacc">—</div>
+        </div>
+        <div class="srow">
+          <div class="slabel">SÉRIE</div>
+          <div class="streak" id="streak">
+            <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+            <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+            <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+            <div class="sdot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAPH -->
+  <div class="panel" id="panel-graph">
+    <div class="ptitle">TRACEUR f(x)</div>
+    <div class="psub">// utilise x comme variable — ex: Math.sin(x), x*x, 1/x</div>
+    <div class="graph-layout">
+      <div class="gcontrols">
+        <div>
+          <div class="glabel">Fonction</div>
+          <div class="finp-row">
+            <span class="fpfx">f(x)=</span>
+            <input id="finp" type="text" value="Math.sin(x)"/>
+          </div>
+        </div>
+        <div>
+          <div class="glabel">Plage X</div>
+          <div class="range-row">
+            <input class="rinp" id="xmin" type="number" value="-10" placeholder="min"/>
+            <input class="rinp" id="xmax" type="number" value="10"  placeholder="max"/>
+          </div>
+        </div>
+        <div>
+          <div class="glabel">Présélections</div>
+          <div class="presets">
+            <button class="pbtn" onclick="sf('Math.sin(x)')">sin(x)</button>
+            <button class="pbtn" onclick="sf('Math.cos(x)')">cos(x)</button>
+            <button class="pbtn" onclick="sf('Math.tan(x)')">tan(x)</button>
+            <button class="pbtn" onclick="sf('x*x')">x²</button>
+            <button class="pbtn" onclick="sf('x*x*x')">x³</button>
+            <button class="pbtn" onclick="sf('Math.sqrt(Math.abs(x))')">√|x|</button>
+            <button class="pbtn" onclick="sf('Math.log(Math.abs(x))')">ln|x|</button>
+            <button class="pbtn" onclick="sf('1/x')">1/x</button>
+          </div>
+        </div>
+        <button class="plot-btn" onclick="plot()">TRACER &gt;&gt;</button>
+      </div>
+      <div class="gcanvas-wrap">
+        <canvas id="gcanvas" height="480"></canvas>
+        <div id="gcoords">x=0.00 · y=0.00</div>
+        <div id="gerr">ERREUR DE SYNTAXE</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+
+// CLOCK
+function tick(){
+  const n=new Date();
+  $('clock').textContent=[n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+setInterval(tick,1000);tick();
+
+// BOOT
+const lines=[
+  'RB::MATH v3.1.4',
+  '--------------------------------',
+  'INIT modules......[ OK ]',
+  'INIT calculatrice.[ OK ]',
+  'INIT quiz.........[ OK ]',
+  'INIT graphes......[ OK ]',
+  '--------------------------------',
+  'SYSTEME PRET.',
+  '',
+  '> Chargement interface...',
+];
+let bi=0;
+function bootStep(){
+  if(bi>=lines.length){setTimeout(()=>$('boot').classList.add('gone'),500);return;}
+  const p=document.createElement('p');
+  p.textContent=lines[bi++];
+  $('boot-text').appendChild(p);
+  setTimeout(bootStep,bi<8?80:180);
+}
+bootStep();
+
+// NAV
+function showPanel(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  $('panel-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='graph') setTimeout(plot,80);
+}
+
+// ===== CALCULATRICE =====
+let expr='';
+let hist=[];
+
+function ci(v){if(expr==='ERROR')expr='';expr+=v;updDisp();}
+function updDisp(){$('c-expr').textContent=expr;if(!expr)$('c-disp').textContent='0';}
+function cAC(){expr='';$('c-disp').textContent='0';$('c-expr').textContent='';}
+function cDel(){
+  if(expr==='ERROR'){cAC();return;}
+  expr=expr.slice(0,-1);
+  if(!expr)$('c-disp').textContent='0';
+  $('c-expr').textContent=expr;
+}
+function cEval(){
+  if(!expr)return;
+  try{
+    const e=expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+    const res=parseFloat(Function('"use strict";return('+e+')')().toFixed(10));
+    $('c-disp').textContent=res;
+    $('c-disp').style.fontSize=String(res).length>10?'30px':'54px';
+    hist.unshift({e:expr,r:res});
+    renderHist();
+    expr=String(res);
+    $('c-expr').textContent='';
+  }catch{$('c-disp').textContent='ERROR';expr='ERROR';}
+}
+function renderHist(){
+  const el=$('hist-list');
+  if(!hist.length){el.innerHTML='<p style="color:var(--muted);font-size:11px;font-family:\'Share Tech Mono\',monospace">// aucun calcul encore</p>';return;}
+  el.innerHTML=hist.slice(0,20).map(h=>`<div class="hi" onclick="reuseH('${h.r}')"><span class="hi-e">${h.e}</span><span class="hi-r">${h.r}</span></div>`).join('');
+}
+function reuseH(v){expr=String(v);$('c-disp').textContent=v;$('c-expr').textContent='';}
+function clrHist(){hist=[];renderHist();}
+document.addEventListener('keydown',e=>{
+  if(!$('panel-calc').classList.contains('on'))return;
+  const focus=document.activeElement?.id;
+  if(['qinp','finp','xmin','xmax'].includes(focus))return;
+  if(e.key>='0'&&e.key<='9')ci(e.key);
+  else if(['+','-','*','/','.',',','(',')','%'].includes(e.key))ci(e.key);
+  else if(e.key==='Enter')cEval();
+  else if(e.key==='Backspace')cDel();
+  else if(e.key==='Escape')cAC();
+});
+
+// ===== QUIZ =====
+let qMode='qcm',qLevel=1,qAns=null,score=0,total=0,streak=0;
+
+function setMode(m,btn){
+  qMode=m;
+  document.querySelectorAll('.qm-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  $('qchoices').style.display=m==='qcm'?'grid':'none';
+  $('qinp-row').style.display=m==='libre'?'flex':'none';
+  $('qfeed').textContent='';genQ();
+}
+function setLevel(l,btn){
+  qLevel=l;
+  document.querySelectorAll('.lv-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');genQ();
+}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function genQ(){
+  $('qfeed').textContent='';$('qfeed').className='';
+  document.querySelectorAll('.qc').forEach(b=>{b.disabled=false;b.className='qc'});
+  if($('qinp')){$('qinp').value='';$('qinp').disabled=false;}
+  const ops=['+','-','×','÷'];
+  let a,b,op,ans;
+  if(qLevel===1){a=rnd(1,20);b=rnd(1,20);op=ops[rnd(0,1)];if(op==='×'){a=rnd(1,12);b=rnd(1,12);}if(op==='÷'){b=rnd(1,12);a=b*rnd(1,12);}}
+  else if(qLevel===2){a=rnd(10,99);b=rnd(2,50);op=ops[rnd(0,3)];if(op==='×'){a=rnd(2,25);b=rnd(2,25);}if(op==='÷'){b=rnd(2,20);a=b*rnd(2,20);}}
+  else{a=rnd(10,999);b=rnd(10,999);op=ops[rnd(0,3)];if(op==='×'){a=rnd(10,99);b=rnd(10,99);}if(op==='÷'){b=rnd(2,50);a=b*rnd(2,50);}}
+  switch(op){
+    case '+':ans=a+b;break;
+    case '-':if(a<b)[a,b]=[b,a];ans=a-b;break;
+    case '×':ans=a*b;break;
+    case '÷':ans=a/b;break;
+  }
+  qAns=ans;
+  $('quiz-q').textContent=`${a}  ${op}  ${b}  =  ?`;
+  if(qMode==='qcm'){
+    const choices=mkChoices(ans);
+    $('qchoices').innerHTML=choices.map(c=>`<button class="qc" onclick="checkQCM(${c},this)">${c}</button>`).join('');
+    $('qchoices').style.display='grid';
+  }
+}
+function mkChoices(ans){
+  const s=new Set([ans]);
+  while(s.size<4){const d=rnd(1,Math.max(5,Math.round(Math.abs(ans)*.25)));s.add(ans+d);s.add(ans-d);}
+  const arr=[...s].slice(0,4);
+  for(let i=arr.length-1;i>0;i--){const j=rnd(0,i);[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+function checkQCM(val,btn){
+  document.querySelectorAll('.qc').forEach(b=>b.disabled=true);
+  total++;
+  if(val===qAns){btn.classList.add('ok');score++;streak++;$('qfeed').textContent='> CORRECT !';$('qfeed').className='ok';}
+  else{
+    btn.classList.add('ko');streak=0;
+    document.querySelectorAll('.qc').forEach(b=>{if(parseFloat(b.textContent)===qAns)b.classList.add('ok');});
+    $('qfeed').textContent=`> FAUX. Réponse : ${qAns}`;$('qfeed').className='ko';
+  }
+  updScore();
+}
+function checkFree(){
+  const v=parseFloat($('qinp').value);if(isNaN(v))return;
+  total++;
+  if(Math.abs(v-qAns)<0.01){score++;streak++;$('qfeed').textContent='> CORRECT !';$('qfeed').className='ok';}
+  else{streak=0;$('qfeed').textContent=`> FAUX. Réponse : ${qAns}`;$('qfeed').className='ko';}
+  $('qinp').disabled=true;updScore();
+}
+$('qinp').addEventListener('keydown',e=>{if(e.key==='Enter')checkFree();});
+function updScore(){
+  $('sval').textContent=score;
+  const pct=total>0?Math.round(score/total*100):0;
+  $('sacc').textContent=total>0?pct+'%':'—';
+  $('pfill').style.width=pct+'%';
+  document.querySelectorAll('.sdot').forEach((d,i)=>d.classList.toggle('on',i<streak));
+}
+genQ();
+
+// ===== GRAPHES =====
+const canvas=$('gcanvas');
+const ctx=canvas.getContext('2d');
+
+function sf(f){$('finp').value=f;plot();}
+function plot(){
+  const fstr=$('finp').value.trim();
+  const xMin=parseFloat($('xmin').value)||(-10);
+  const xMax=parseFloat($('xmax').value)||10;
+  $('gerr').style.display='none';
+  const W=canvas.parentElement.clientWidth||600;
+  const H=480;
+  canvas.width=W;canvas.height=H;
+  let fn;
+  try{fn=new Function('x','"use strict";return '+fstr);}
+  catch{$('gerr').style.display='block';return;}
+  const steps=W*2;
+  const pts=[];
+  for(let i=0;i<=steps;i++){
+    const x=xMin+(xMax-xMin)*(i/steps);
+    try{const y=fn(x);pts.push({x,y:isFinite(y)?y:NaN});}
+    catch{pts.push({x,y:NaN});}
+  }
+  const ys=pts.map(p=>p.y).filter(y=>!isNaN(y)&&isFinite(y));
+  if(!ys.length){$('gerr').style.display='block';return;}
+  let yMin=Math.min(...ys),yMax=Math.max(...ys);
+  if(yMin===yMax){yMin-=1;yMax+=1;}
+  const pad=(yMax-yMin)*.1;yMin-=pad;yMax+=pad;
+  const toC=(x,y)=>({cx:(x-xMin)/(xMax-xMin)*W,cy:H-(y-yMin)/(yMax-yMin)*H});
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#060e08';ctx.fillRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle='#00FF4112';ctx.lineWidth=1;
+  const xS=nS(xMax-xMin),yS=nS(yMax-yMin);
+  for(let gx=Math.ceil(xMin/xS)*xS;gx<=xMax;gx+=xS){const{cx}=toC(gx,0);ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();}
+  for(let gy=Math.ceil(yMin/yS)*yS;gy<=yMax;gy+=yS){const{cy}=toC(0,gy);ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();}
+  // axes
+  ctx.strokeStyle='#00FF4138';ctx.lineWidth=1.5;
+  if(yMin<0&&yMax>0){const{cy}=toC(0,0);ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();}
+  if(xMin<0&&xMax>0){const{cx}=toC(0,0);ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();}
+  // labels
+  ctx.fillStyle='#006622';ctx.font='10px Share Tech Mono';ctx.textAlign='center';
+  for(let gx=Math.ceil(xMin/xS)*xS;gx<=xMax;gx+=xS){
+    if(Math.abs(gx)<xS*.01)continue;
+    const{cx,cy}=toC(gx,yMin<0&&yMax>0?0:yMin);
+    ctx.fillText(r2(gx),cx,Math.min(cy+14,H-4));
+  }
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(yMin/yS)*yS;gy<=yMax;gy+=yS){
+    if(Math.abs(gy)<yS*.01)continue;
+    const{cx,cy}=toC(xMin<0&&xMax>0?0:xMin,gy);
+    ctx.fillText(r2(gy),Math.max(cx+30,34),cy+4);
+  }
+  // curve glow
+  ctx.strokeStyle='rgba(0,255,65,.25)';ctx.lineWidth=5;ctx.shadowBlur=0;
+  drawCurve(pts,toC);
+  // curve main
+  ctx.strokeStyle='#00FF41';ctx.lineWidth=2;
+  ctx.shadowColor='#00FF41';ctx.shadowBlur=10;
+  drawCurve(pts,toC);
+  ctx.shadowBlur=0;
+  canvas.onmousemove=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left;
+    const rx=xMin+(mx/W)*(xMax-xMin);
+    let ry=NaN;try{ry=fn(rx);}catch{}
+    $('gcoords').textContent=`x=${r2(rx)} · y=${isFinite(ry)?r2(ry):'∞'}`;
+  };
+}
+function drawCurve(pts,toC){
+  ctx.beginPath();let drawing=false;
+  for(const p of pts){
+    if(isNaN(p.y)){drawing=false;continue;}
+    const{cx,cy}=toC(p.x,p.y);
+    if(!drawing){ctx.moveTo(cx,cy);drawing=true;}else ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+}
+function nS(range){const raw=range/6,mag=Math.pow(10,Math.floor(Math.log10(raw))),norm=raw/mag;if(norm<1.5)return mag;if(norm<3.5)return 2*mag;if(norm<7.5)return 5*mag;return 10*mag;}
+function r2(v){return Math.round(v*100)/100;}
+window.addEventListener('resize',()=>{if($('panel-graph').classList.contains('on'))plot();});
+</script>
+</body>
+</html>
